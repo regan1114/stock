@@ -1,0 +1,36 @@
+version: "3"
+services:
+  python:
+    container_name: python38
+    restart: always
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    volumes:
+      - ./python/crontab:/etc/crontab
+    environment:
+      - TZ=Asia/Taipei
+    privileged: true                # centos 需要
+    command: /usr/sbin/init         # centos 需要
+    depends_on:
+      # 先由名稱db的container啟動
+      - db
+  db:
+    container_name: mariadb
+    build:
+      context: ./mariadb
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_PASSWORD=root
+      - TZ=Asia/Taipei
+      - LANG=C.UTF-8
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mariadb/data:/var/lib/mysql      
+      - ./mariadb/init:/docker-entrypoint-initdb.d/
+      - ./mariadb/sql:/opt/sql/
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  
